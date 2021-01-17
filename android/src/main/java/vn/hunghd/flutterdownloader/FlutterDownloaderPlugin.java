@@ -117,7 +117,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         }
     }
 
-    private WorkRequest buildRequest(String url, String savedDir, String filename, String headers, boolean showNotification, boolean openFileFromNotification, boolean isResume, boolean requiresStorageNotLow) {
+    private WorkRequest buildRequest(String url, String savedDir, String filename, String headers, boolean showNotification, boolean openFileFromNotification, boolean isResume, boolean requiresStorageNotLow, String task_id) {
         WorkRequest request = new OneTimeWorkRequest.Builder(DownloadWorker.class)
                 .setConstraints(new Constraints.Builder()
                         .setRequiresStorageNotLow(requiresStorageNotLow)
@@ -127,6 +127,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 5, TimeUnit.SECONDS)
                 .setInputData(new Data.Builder()
                         .putString(DownloadWorker.ARG_URL, url)
+                        .putString(DownloadWorker.ARG_ID, task_id)
                         .putString(DownloadWorker.ARG_SAVED_DIR, savedDir)
                         .putString(DownloadWorker.ARG_FILE_NAME, filename)
                         .putString(DownloadWorker.ARG_HEADERS, headers)
@@ -138,6 +139,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                         .build()
                 )
                 .build();
+
         return request;
     }
 
@@ -171,12 +173,13 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         String savedDir = call.argument("saved_dir");
         String filename = call.argument("file_name");
         String headers = call.argument("headers");
+        String taskId = call.argument("task_id");
+
         boolean showNotification = call.argument("show_notification");
         boolean openFileFromNotification = call.argument("open_file_from_notification");
         boolean requiresStorageNotLow = call.argument("requires_storage_not_low");
-        WorkRequest request = buildRequest(url, savedDir, filename, headers, showNotification, openFileFromNotification, false, requiresStorageNotLow);
+        WorkRequest request = buildRequest(url, savedDir, filename, headers, showNotification, openFileFromNotification, false, requiresStorageNotLow,taskId);
         WorkManager.getInstance(context).enqueue(request);
-        String taskId = call.argument("task_id");
         result.success(taskId);
         sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, 0);
         taskDao.insertOrUpdateNewTask(taskId, url, DownloadStatus.ENQUEUED, 0, filename, savedDir, headers, showNotification, openFileFromNotification,0);
@@ -251,7 +254,8 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                 if (partialFile.exists()) {
                     //todo: check if this is good
                     partialFile.delete();
-                    WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, true, requiresStorageNotLow);
+                    WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, true, requiresStorageNotLow, taskId);
+
                     result.success(taskId);
                     sendUpdateProgress(taskId, DownloadStatus.RUNNING, task.progress);
                     taskDao.updateTask(taskId, taskId, DownloadStatus.RUNNING, task.progress, false);
@@ -273,7 +277,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         boolean requiresStorageNotLow = call.argument("requires_storage_not_low");
         if (task != null) {
             if (task.status == DownloadStatus.FAILED || task.status == DownloadStatus.CANCELED) {
-                WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, false, requiresStorageNotLow);
+                WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, false, requiresStorageNotLow,taskId);
                 //check if this works because it was generating a new task id here
                  result.success(taskId);
                 sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, task.progress);

@@ -169,6 +169,9 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
         taskDao = new TaskDao(dbHelper);
 
         task_id = getInputData().getString(ARG_ID);
+
+
+
         String url = getInputData().getString(ARG_URL);
         String filename = getInputData().getString(ARG_FILE_NAME);
         String savedDir = getInputData().getString(ARG_SAVED_DIR);
