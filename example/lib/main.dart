@@ -213,7 +213,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         if (task.status == DownloadTaskStatus.undefined) {
                           _requestDownload(task);
                         } else if (task.status == DownloadTaskStatus.running) {
-                          _pauseDownload(task);
+                          _cancelDownload(task);
                         } else if (task.status == DownloadTaskStatus.paused) {
                           _resumeDownload(task);
                         } else if (task.status == DownloadTaskStatus.complete) {
@@ -468,7 +468,7 @@ class DownloadItem extends StatelessWidget {
           onAtionClick(task);
         },
         child: Icon(
-          Icons.pause,
+          Icons.stop,
           color: Colors.red,
         ),
         shape: CircleBorder(),

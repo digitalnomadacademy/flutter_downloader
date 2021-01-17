@@ -68,6 +68,8 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
     public static final String ARG_CALLBACK_HANDLE = "callback_handle";
     public static final String ARG_DEBUG = "debug";
 
+    public  static final int DOWNLOADING_ID = 0;
+
     private static final String TAG = DownloadWorker.class.getSimpleName();
     private static final int BUFFER_SIZE = 4096;
     private static final String CHANNEL_ID = "FLUTTER_DOWNLOADER_NOTIFICATION";
@@ -460,60 +462,38 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
     private void updateNotification(Context context, String title, int status, int progress, PendingIntent intent, boolean finalize) {
         sendUpdateProcessEvent(status, progress);
 
-        // Show the notification
-        if (showNotification) {
-            // Create the notification
+        if(showNotification){
+            Double averageProgress = 0.0;
+            Double sum = 0.0;
+            int count = 0;
+            List<DownloadTask> tasks =   taskDao.loadAllTasks();
+            for (DownloadTask task : tasks){
+                if(task.status==DownloadStatus.RUNNING){
+                    sum+=task.progress;
+                    count++;
+                }
+            }
+
+            if(count!=0){
+                averageProgress = sum/count;
+            }
+
+
+
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
-                    setContentTitle(title)
-                    .setContentIntent(intent)
-                    .setOnlyAlertOnce(true)
+                    setContentTitle("Downloading "+count+ " files")
+                     .setOnlyAlertOnce(true)
                     .setAutoCancel(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW);
 
-            if (status == DownloadStatus.RUNNING) {
-                if (progress <= 0) {
-                    builder.setContentText(msgStarted)
-                            .setProgress(0, 0, false);
-                    builder.setOngoing(false)
-                            .setSmallIcon(getNotificationIconRes());
-                } else if (progress < 100) {
-                    builder.setContentText(msgInProgress)
-                            .setProgress(100, progress, false);
-                    builder.setOngoing(true)
-                            .setSmallIcon(android.R.drawable.stat_sys_download);
-                } else {
-                    builder.setContentText(msgComplete).setProgress(0, 0, false);
-                    builder.setOngoing(false)
-                            .setSmallIcon(android.R.drawable.stat_sys_download_done);
-                }
-            } else if (status == DownloadStatus.CANCELED) {
-                builder.setContentText(msgCanceled).setProgress(0, 0, false);
-                builder.setOngoing(false)
-                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
-            } else if (status == DownloadStatus.FAILED) {
-                builder.setContentText(msgFailed).setProgress(0, 0, false);
-                builder.setOngoing(false)
-                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
-            } else if (status == DownloadStatus.PAUSED) {
-                builder.setContentText(msgPaused).setProgress(0, 0, false);
-                builder.setOngoing(false)
-                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
-            } else if (status == DownloadStatus.COMPLETE) {
-                builder.setContentText(msgComplete).setProgress(0, 0, false);
-                builder.setOngoing(false)
-                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
-            } else {
-                builder.setProgress(0, 0, false);
-                builder.setOngoing(false).setSmallIcon(getNotificationIconRes());
-            }
 
-            // Note: Android applies a rate limit when updating a notification.
-            // If you post updates to a notification too frequently (many in less than one second),
-            // the system might drop some updates. (https://developer.android.com/training/notify-user/build-notification#Updating)
-            //
-            // If this is progress update, it's not much important if it is dropped because there're still incoming updates later
-            // If this is the final update, it must be success otherwise the notification will be stuck at the processing state
-            // In order to ensure the final one is success, we check and sleep a second if need.
+            builder.setContentText(msgInProgress)
+                    .setProgress(100, averageProgress.intValue(), false);
+
+             builder.setOngoing(count != 0)
+                    .setSmallIcon(android.R.drawable.stat_sys_download);
+
+
             if (System.currentTimeMillis() - lastCallUpdateNotification < 1000) {
                 if (finalize) {
                     log("Update too frequently!!!!, but it is the final update, we should sleep a second to ensure the update call can be processed");
@@ -528,9 +508,93 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 }
             }
             log("Update notification: {notificationId: " + primaryId + ", title: " + title + ", status: " + status + ", progress: " + progress + "}");
-            NotificationManagerCompat.from(context).notify(primaryId, builder.build());
+
+            log("Download count is "+count+" with average progress of "+ averageProgress);
+
+
+            if(count==0||averageProgress==100.0){
+                 NotificationManagerCompat.from(context).cancelAll();
+             } else {
+                 NotificationManagerCompat.from(context).notify(DOWNLOADING_ID, builder.build());
+             }
+
+
             lastCallUpdateNotification = System.currentTimeMillis();
+
         }
+
+
+        // Show the notification
+//        if (showNotification) {
+//            // Create the notification
+//            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
+//                    setContentTitle(title)
+//                    .setContentIntent(intent)
+//                    .setOnlyAlertOnce(true)
+//                    .setAutoCancel(true)
+//                    .setPriority(NotificationCompat.PRIORITY_LOW);
+//
+//            if (status == DownloadStatus.RUNNING) {
+//                if (progress <= 0) {
+//                    builder.setContentText(msgStarted)
+//                            .setProgress(0, 0, false);
+//                    builder.setOngoing(false)
+//                            .setSmallIcon(getNotificationIconRes());
+//                } else if (progress < 100) {
+//                    builder.setContentText(msgInProgress)
+//                            .setProgress(100, progress, false);
+//                    builder.setOngoing(true)
+//                            .setSmallIcon(android.R.drawable.stat_sys_download);
+//                } else {
+//                    builder.setContentText(msgComplete).setProgress(0, 0, false);
+//                    builder.setOngoing(false)
+//                            .setSmallIcon(android.R.drawable.stat_sys_download_done);
+//                }
+//            } else if (status == DownloadStatus.CANCELED) {
+//                builder.setContentText(msgCanceled).setProgress(0, 0, false);
+//                builder.setOngoing(false)
+//                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
+//            } else if (status == DownloadStatus.FAILED) {
+//                builder.setContentText(msgFailed).setProgress(0, 0, false);
+//                builder.setOngoing(false)
+//                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
+//            } else if (status == DownloadStatus.PAUSED) {
+//                builder.setContentText(msgPaused).setProgress(0, 0, false);
+//                builder.setOngoing(false)
+//                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
+//            } else if (status == DownloadStatus.COMPLETE) {
+//                builder.setContentText(msgComplete).setProgress(0, 0, false);
+//                builder.setOngoing(false)
+//                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
+//            } else {
+//                builder.setProgress(0, 0, false);
+//                builder.setOngoing(false).setSmallIcon(getNotificationIconRes());
+//            }
+//
+//            // Note: Android applies a rate limit when updating a notification.
+//            // If you post updates to a notification too frequently (many in less than one second),
+//            // the system might drop some updates. (https://developer.android.com/training/notify-user/build-notification#Updating)
+//            //
+//            // If this is progress update, it's not much important if it is dropped because there're still incoming updates later
+//            // If this is the final update, it must be success otherwise the notification will be stuck at the processing state
+//            // In order to ensure the final one is success, we check and sleep a second if need.
+//            if (System.currentTimeMillis() - lastCallUpdateNotification < 1000) {
+//                if (finalize) {
+//                    log("Update too frequently!!!!, but it is the final update, we should sleep a second to ensure the update call can be processed");
+//                    try {
+//                        Thread.sleep(1000);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                } else {
+//                    log("Update too frequently!!!!, this should be dropped");
+//                    return;
+//                }
+//            }
+//            log("Update notification: {notificationId: " + primaryId + ", title: " + title + ", status: " + status + ", progress: " + progress + "}");
+//            NotificationManagerCompat.from(context).notify(primaryId, builder.build());
+//            lastCallUpdateNotification = System.currentTimeMillis();
+//        }
     }
 
     private void sendUpdateProcessEvent(int status, int progress) {
