@@ -86,6 +86,16 @@ class DownloadTask {
   }
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DownloadTask &&
+          runtimeType == other.runtimeType &&
+          taskId == other.taskId;
+
+  @override
+  int get hashCode => taskId.hashCode;
+
+  @override
   String toString() =>
       "DownloadTask(taskId: $taskId, status: $status, progress: $progress, url: $url, filename: $filename, savedDir: $savedDir, timeCreated: $timeCreated)";
 }
