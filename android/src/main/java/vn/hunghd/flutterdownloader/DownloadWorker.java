@@ -1,5 +1,6 @@
 package vn.hunghd.flutterdownloader;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -73,7 +74,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
     private static final String TAG = DownloadWorker.class.getSimpleName();
     private static final int BUFFER_SIZE = 4096;
     private static final String CHANNEL_ID = "FLUTTER_DOWNLOADER_NOTIFICATION";
-    private static final int STEP_UPDATE = 10;
+    private static final int STEP_UPDATE = 5;
 
     private static final AtomicBoolean isolateStarted = new AtomicBoolean(false);
     private static final ArrayDeque<List> isolateQueue = new ArrayDeque<>();
@@ -300,7 +301,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
             if ((responseCode == HttpURLConnection.HTTP_OK || (isResume && responseCode == HttpURLConnection.HTTP_PARTIAL)) && !isStopped()) {
                 String contentType = httpConn.getContentType();
-                int contentLength = httpConn.getContentLength();
+                long contentLength = httpConn.getContentLength();
                 log("Content-Type = " + contentType);
                 log("Content-Length = " + contentLength);
 
@@ -324,7 +325,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
                 log("fileName = " + filename);
 
-                taskDao.updateTask(getId().toString(), filename, contentType);
+                taskDao.updateTask(getId().toString(), filename, contentType,contentLength);
 
                 // opens input stream from the HTTP connection
                 inputStream = httpConn.getInputStream();
@@ -375,6 +376,11 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 }
                 updateNotification(context, filename, status, progress, pendingIntent, true);
                 taskDao.updateTask(getId().toString(), status, progress);
+
+                if(isStopped()){
+                    NotificationManagerCompat.from(context).cancelAll();
+
+                }
 
                 log(isStopped() ? "Download canceled" : "File downloaded");
             } else {
@@ -459,35 +465,48 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
         }
     }
 
+    @SuppressLint("DefaultLocale")
     private void updateNotification(Context context, String title, int status, int progress, PendingIntent intent, boolean finalize) {
         sendUpdateProcessEvent(status, progress);
 
-        if(showNotification){
+        if(progress==-1){
+            NotificationManagerCompat.from(context).cancelAll();
+        }
+
+
+        if(showNotification&&progress!=-1){
             Double averageProgress = 0.0;
             Double sum = 0.0;
+            Double fileSizeSum = 0.0;
+            Double remainingFileSizeSum = 0.0;
             int count = 0;
             List<DownloadTask> tasks =   taskDao.loadAllTasks();
             for (DownloadTask task : tasks){
                 if(task.status==DownloadStatus.RUNNING){
                     sum+=task.progress;
+                    fileSizeSum+=task.fileSize;
                     count++;
                 }
             }
 
             if(count!=0){
                 averageProgress = sum/count;
+                remainingFileSizeSum = (averageProgress/100)*fileSizeSum;
+            }
+            if(count==0||averageProgress==100){
+                NotificationManagerCompat.from(context).cancelAll();
             }
 
 
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
                     setContentTitle("Downloading "+count+ " files")
-                     .setOnlyAlertOnce(true)
+                      .setOnlyAlertOnce(true)
                     .setAutoCancel(true)
                     .setPriority(NotificationCompat.PRIORITY_LOW);
 
 
-            builder.setContentText(msgInProgress)
+            builder.setContentText(msgInProgress+" "+String.format("%.2f", remainingFileSizeSum* 0.000001)+"/"+String.format("%.2f", fileSizeSum* 0.000001)+" MB")
                     .setProgress(100, averageProgress.intValue(), false);
 
              builder.setOngoing(count != 0)
