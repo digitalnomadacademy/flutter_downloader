@@ -176,7 +176,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         boolean requiresStorageNotLow = call.argument("requires_storage_not_low");
         WorkRequest request = buildRequest(url, savedDir, filename, headers, showNotification, openFileFromNotification, false, requiresStorageNotLow);
         WorkManager.getInstance(context).enqueue(request);
-        String taskId = request.getId().toString();
+        String taskId = call.argument("task_id");
         result.success(taskId);
         sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, 0);
         taskDao.insertOrUpdateNewTask(taskId, url, DownloadStatus.ENQUEUED, 0, filename, savedDir, headers, showNotification, openFileFromNotification,0);
@@ -247,12 +247,14 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                 }
                 String partialFilePath = task.savedDir + File.separator + filename;
                 File partialFile = new File(partialFilePath);
+                
                 if (partialFile.exists()) {
+                    //todo: check if this is good
+                    partialFile.delete();
                     WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, true, requiresStorageNotLow);
-                    String newTaskId = request.getId().toString();
-                    result.success(newTaskId);
-                    sendUpdateProgress(newTaskId, DownloadStatus.RUNNING, task.progress);
-                    taskDao.updateTask(taskId, newTaskId, DownloadStatus.RUNNING, task.progress, false);
+                    result.success(taskId);
+                    sendUpdateProgress(taskId, DownloadStatus.RUNNING, task.progress);
+                    taskDao.updateTask(taskId, taskId, DownloadStatus.RUNNING, task.progress, false);
                     WorkManager.getInstance(context).enqueue(request);
                 } else {
                     result.error("invalid_data", "not found partial downloaded data, this task cannot be resumed", null);
@@ -272,10 +274,10 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         if (task != null) {
             if (task.status == DownloadStatus.FAILED || task.status == DownloadStatus.CANCELED) {
                 WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, false, requiresStorageNotLow);
-                String newTaskId = request.getId().toString();
-                result.success(newTaskId);
-                sendUpdateProgress(newTaskId, DownloadStatus.ENQUEUED, task.progress);
-                taskDao.updateTask(taskId, newTaskId, DownloadStatus.ENQUEUED, task.progress, false);
+                //check if this works because it was generating a new task id here
+                 result.success(taskId);
+                sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, task.progress);
+                taskDao.updateTask(taskId, taskId, DownloadStatus.ENQUEUED, task.progress, false);
                 WorkManager.getInstance(context).enqueue(request);
             } else {
                 result.error("invalid_status", "only failed and canceled task can be retried", null);

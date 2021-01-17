@@ -63,7 +63,9 @@ class FlutterDownloader {
   /// an unique identifier of the new download task
   ///
   static Future<String> enqueue(
-      {@required String url,
+      {
+        @required String task_id,
+        @required String url,
       @required String savedDir,
       String fileName,
       Map<String, String> headers,
@@ -85,6 +87,7 @@ class FlutterDownloader {
     try {
       String taskId = await _channel.invokeMethod('enqueue', {
         'url': url,
+        'task_id': task_id,
         'saved_dir': savedDir,
         'file_name': fileName,
         'headers': headerBuilder.toString(),
