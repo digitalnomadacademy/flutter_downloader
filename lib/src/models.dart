@@ -55,6 +55,36 @@ class DownloadTask {
       this.savedDir,
       this.timeCreated});
 
+  DownloadTask copyWith({
+    String taskId,
+    DownloadTaskStatus status,
+    int progress,
+    String url,
+    String filename,
+    String savedDir,
+    int timeCreated,
+  }) {
+    if ((taskId == null || identical(taskId, this.taskId)) &&
+        (status == null || identical(status, this.status)) &&
+        (progress == null || identical(progress, this.progress)) &&
+        (url == null || identical(url, this.url)) &&
+        (filename == null || identical(filename, this.filename)) &&
+        (savedDir == null || identical(savedDir, this.savedDir)) &&
+        (timeCreated == null || identical(timeCreated, this.timeCreated))) {
+      return this;
+    }
+
+    return new DownloadTask(
+      taskId: taskId ?? this.taskId,
+      status: status ?? this.status,
+      progress: progress ?? this.progress,
+      url: url ?? this.url,
+      filename: filename ?? this.filename,
+      savedDir: savedDir ?? this.savedDir,
+      timeCreated: timeCreated ?? this.timeCreated,
+    );
+  }
+
   @override
   String toString() =>
       "DownloadTask(taskId: $taskId, status: $status, progress: $progress, url: $url, filename: $filename, savedDir: $savedDir, timeCreated: $timeCreated)";
