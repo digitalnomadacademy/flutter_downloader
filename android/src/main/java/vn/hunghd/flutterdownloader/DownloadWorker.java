@@ -481,6 +481,28 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
         if(progress==-1){
             NotificationManagerCompat.from(context).cancelAll();
         }
+        if(progress==100){
+          DownloadTask task =    taskDao.loadTask(task_id);
+          log("downloaded "+ task.filename);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
+                    setContentTitle("Downloaded "+task.filename)
+                    .setOnlyAlertOnce(true)
+                    .setAutoCancel(true)
+                    .setPriority(NotificationCompat.PRIORITY_HIGH);
+                            builder.setContentText("100%").setProgress(0, 0, false);
+                builder.setOngoing(false)
+                        .setSmallIcon(android.R.drawable.stat_sys_download_done);
+                log("Notifiying "+task_id.hashCode());
+                try {
+                    NotificationManagerCompat.from(context).notify(task_id.hashCode(), builder.build());
+                }
+                catch (Exception e){
+                    log("Exception while notifying"+e.toString());
+                }
+
+        }
+
 
 
         if(showNotification&&progress!=-1){
@@ -503,7 +525,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 remainingFileSizeSum = (averageProgress/100)*fileSizeSum;
             }
             if(count==0||averageProgress==100){
-                NotificationManagerCompat.from(context).cancelAll();
+                NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
             }
 
 
@@ -541,7 +563,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
 
             if(count==0||averageProgress==100.0){
-                 NotificationManagerCompat.from(context).cancelAll();
+                NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
              } else {
                  NotificationManagerCompat.from(context).notify(DOWNLOADING_ID, builder.build());
              }
