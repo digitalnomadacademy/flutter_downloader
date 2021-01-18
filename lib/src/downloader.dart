@@ -17,7 +17,7 @@ import 'models.dart';
 /// range of 0 and 100
 ///
 typedef void DownloadCallback(
-    String id, DownloadTaskStatus status, int progress);
+    String id, DownloadTaskStatus status, int progress, String worker_id);
 
 ///
 /// A convenient class wraps all api functions of **FlutterDownloader** plugin
@@ -386,13 +386,30 @@ class FlutterDownloader {
   ///
   /// {@end-tool}
   ///
-  static registerCallback(DownloadCallback callback) {
+  static registerCallback(DownloadCallback callback)async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
+    if (callback != null) {
+      // remove previous setting
+      _channel.setMethodCallHandler(null);
+      _channel.setMethodCallHandler((MethodCall call) async {
+        if (call.method == 'updateProgress') {
+          String id = call.arguments['task_id'];
+          int status = call.arguments['status'];
+          int process = call.arguments['progress'];
+          String worker_id = call.arguments['worker_id'];
+          callback(id, DownloadTaskStatus(status), process,worker_id);
+        }
+        return null;
+      });
+    } else {
+      _channel.setMethodCallHandler(null);
+    }
 
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
     assert(callbackHandle != null,
         'callback must be a top-level or a static function');
-    _channel.invokeMethod(
+  var handle = await  _channel.invokeMethod(
         'registerCallback', <dynamic>[callbackHandle.toRawHandle()]);
+  return handle;
   }
 }

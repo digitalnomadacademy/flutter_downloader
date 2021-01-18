@@ -402,6 +402,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             updateNotification(context, filename == null ? fileURL : filename, DownloadStatus.FAILED, -1, null, true);
             taskDao.updateTask(task_id, DownloadStatus.FAILED, lastProgress);
             e.printStackTrace();
+
         } finally {
             if (outputStream != null) {
                 try {
@@ -627,11 +628,13 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
     private void sendUpdateProcessEvent(int status, int progress) {
         final List<Object> args = new ArrayList<>();
         long callbackHandle = getInputData().getLong(ARG_CALLBACK_HANDLE, 0);
+        String worker_id = getId().toString();
         args.add(callbackHandle);
         args.add(task_id);
         args.add(status);
         args.add(progress);
-
+        args.add(worker_id);
+        log("Sendng update process event : "+args);
         synchronized (isolateStarted) {
             if (!isolateStarted.get()) {
                 isolateQueue.add(args);

@@ -9,6 +9,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.util.Log;
 
 import androidx.core.app.NotificationManagerCompat;
 
@@ -143,12 +144,17 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         return request;
     }
 
-    private void sendUpdateProgress(String id, int status, int progress) {
-        Map<String, Object> args = new HashMap<>();
+    private void sendUpdateProgress(String id, int status, int progress,String worker_id) {
+        HashMap<String, Object> args = new HashMap<>();
         args.put("task_id", id);
         args.put("status", status);
         args.put("progress", progress);
+        args.put("worker_id", worker_id);
+        log("Send update progress with args "+args);
         flutterChannel.invokeMethod("updateProgress", args);
+    }
+    private void log(String message) {
+            Log.d(TAG, message);
     }
 
     private void initialize(MethodCall call, MethodChannel.Result result) {
@@ -165,7 +171,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
     private void registerCallback(MethodCall call, MethodChannel.Result result) {
         List args = (List) call.arguments;
         callbackHandle = Long.parseLong(args.get(0).toString());
-        result.success(null);
+        result.success(String.valueOf(callbackHandle));
     }
 
     private void enqueue(MethodCall call, MethodChannel.Result result) {
@@ -181,7 +187,8 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         WorkRequest request = buildRequest(url, savedDir, filename, headers, showNotification, openFileFromNotification, false, requiresStorageNotLow,taskId);
         WorkManager.getInstance(context).enqueue(request);
         result.success(taskId);
-        sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, 0);
+        String worker_id = request.getId().toString();
+        sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, 0,worker_id);
         taskDao.insertOrUpdateNewTask(taskId, url, DownloadStatus.ENQUEUED, 0, filename, savedDir, headers, showNotification, openFileFromNotification,0);
     }
 
@@ -257,7 +264,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                     WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, true, requiresStorageNotLow, taskId);
 
                     result.success(taskId);
-                    sendUpdateProgress(taskId, DownloadStatus.RUNNING, task.progress);
+                    sendUpdateProgress(taskId, DownloadStatus.RUNNING, task.progress,request.getId().toString());
                     taskDao.updateTask(taskId, taskId, DownloadStatus.RUNNING, task.progress, false);
                     WorkManager.getInstance(context).enqueue(request);
                 } else {
@@ -280,7 +287,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                 WorkRequest request = buildRequest(task.url, task.savedDir, task.filename, task.headers, task.showNotification, task.openFileFromNotification, false, requiresStorageNotLow,taskId);
                 //check if this works because it was generating a new task id here
                  result.success(taskId);
-                sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, task.progress);
+                sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, task.progress,request.getId().toString());
                 taskDao.updateTask(taskId, taskId, DownloadStatus.ENQUEUED, task.progress, false);
                 WorkManager.getInstance(context).enqueue(request);
             } else {

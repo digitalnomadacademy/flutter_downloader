@@ -1,8 +1,10 @@
 import 'dart:isolate';
+import 'dart:math';
 import 'dart:ui';
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
@@ -142,17 +144,17 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
     _port.listen((dynamic data) {
-      if (debug) {
-        print('UI Isolate Callback: $data');
-      }
+         print('UI Isolate Callback: $data');
+
       String id = data[0];
       DownloadTaskStatus status = data[1];
       int progress = data[2];
-
+      String worker_id = data[3];
       if (_tasks != null && _tasks.isNotEmpty) {
         final task = _tasks.firstWhere((task) => task.taskId == id);
         if (task != null) {
           setState(() {
+            task.worker_id = worker_id;
             task.status = status;
             task.progress = progress;
           });
@@ -166,14 +168,14 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   static void downloadCallback(
-      String id, DownloadTaskStatus status, int progress) {
-    if (debug) {
+      String id, DownloadTaskStatus status, int progress, String worker_id) {
+    if (kDebugMode) {
       print(
-          'Background Isolate Callback: task ($id) is in status ($status) and process ($progress)');
+          'Background Isolate Callback: task ($id) is in status ($status) and process ($progress) and worker id ()');
     }
     final SendPort send =
         IsolateNameServer.lookupPortByName('downloader_send_port');
-    send.send([id, status, progress]);
+    send.send([id, status, progress, worker_id]);
   }
 
   @override
@@ -284,7 +286,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _cancelDownload(_TaskInfo task) async {
-    await FlutterDownloader.cancel(taskId: task.taskId);
+    var taskel = _tasks.firstWhere((element) => element.link == task.link);
+    await FlutterDownloader.cancel(taskId: taskel.worker_id);
   }
 
   void _pauseDownload(_TaskInfo task) async {
@@ -546,7 +549,9 @@ class _TaskInfo {
   int progress = 0;
   DownloadTaskStatus status = DownloadTaskStatus.undefined;
 
-  _TaskInfo({this.name, this.link});
+  String worker_id;
+
+  _TaskInfo({this.name, this.link, this.worker_id});
 }
 
 class _ItemHolder {
