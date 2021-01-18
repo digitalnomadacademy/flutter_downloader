@@ -45,6 +45,7 @@ class DownloadTask {
   final String filename;
   final String savedDir;
   final int timeCreated;
+  final String worker_id;
 
   DownloadTask(
       {this.taskId,
@@ -53,6 +54,7 @@ class DownloadTask {
       this.url,
       this.filename,
       this.savedDir,
+      this.worker_id,
       this.timeCreated});
 
   DownloadTask copyWith({
@@ -63,6 +65,7 @@ class DownloadTask {
     String filename,
     String savedDir,
     int timeCreated,
+    String worker_id,
   }) {
     if ((taskId == null || identical(taskId, this.taskId)) &&
         (status == null || identical(status, this.status)) &&
@@ -70,7 +73,8 @@ class DownloadTask {
         (url == null || identical(url, this.url)) &&
         (filename == null || identical(filename, this.filename)) &&
         (savedDir == null || identical(savedDir, this.savedDir)) &&
-        (timeCreated == null || identical(timeCreated, this.timeCreated))) {
+        (timeCreated == null || identical(timeCreated, this.timeCreated)) &&
+        (worker_id == null || identical(worker_id, this.worker_id))) {
       return this;
     }
 
@@ -82,6 +86,7 @@ class DownloadTask {
       filename: filename ?? this.filename,
       savedDir: savedDir ?? this.savedDir,
       timeCreated: timeCreated ?? this.timeCreated,
+      worker_id: worker_id ?? this.worker_id,
     );
   }
 
