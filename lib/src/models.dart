@@ -46,6 +46,7 @@ class DownloadTask {
   final String savedDir;
   final int timeCreated;
   final String worker_id;
+  final int file_size;
 
   DownloadTask(
       {this.taskId,
@@ -55,6 +56,7 @@ class DownloadTask {
       this.filename,
       this.savedDir,
       this.worker_id,
+        this.file_size,
       this.timeCreated});
 
   DownloadTask copyWith({

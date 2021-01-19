@@ -115,6 +115,7 @@ class FlutterDownloader {
       List<dynamic> result = await _channel.invokeMethod('loadTasks');
       return result
           .map((item) => new DownloadTask(
+              file_size: item["file_size"],
               taskId: item['task_id'],
               status: DownloadTaskStatus(item['status']),
               progress: item['progress'],
@@ -158,6 +159,7 @@ class FlutterDownloader {
           .invokeMethod('loadTasksWithRawQuery', {'query': query});
       return result
           .map((item) => new DownloadTask(
+              file_size: item["file_size"],
               taskId: item['task_id'],
               status: DownloadTaskStatus(item['status']),
               progress: item['progress'],
@@ -179,7 +181,8 @@ class FlutterDownloader {
   ///
   /// * `taskId`: unique identifier of the download task
   ///
-  static Future<Null> cancel({@required String taskId, String worker_id}) async {
+  static Future<Null> cancel(
+      {@required String taskId, String worker_id}) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
     try {
