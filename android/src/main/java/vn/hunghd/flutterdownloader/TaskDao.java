@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.provider.BaseColumns;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -77,7 +78,13 @@ public class TaskDao {
 
         List<DownloadTask> result = new ArrayList<>();
         while (cursor.moveToNext()) {
-            result.add(parseCursor(cursor));
+            DownloadTask task = parseCursor(cursor);
+            File file = new File(task.savedDir+File.pathSeparator+task.filename);
+            if(file.exists()||task.status==DownloadStatus.FAILED){
+                result.add(task);
+            } else {
+                deleteTask(task.taskId);
+            }
         }
         cursor.close();
 
