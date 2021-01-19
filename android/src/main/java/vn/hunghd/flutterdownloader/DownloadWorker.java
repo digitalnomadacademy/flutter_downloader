@@ -13,6 +13,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -483,6 +485,15 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             notificationManager.createNotificationChannel(channel);
         }
     }
+    public static String getMimeType(File file, Context context)
+    {
+        Uri uri = Uri.fromFile(file);
+        ContentResolver cR = context.getContentResolver();
+        MimeTypeMap mime = MimeTypeMap.getSingleton();
+        String type = mime.getExtensionFromMimeType(cR.getType(uri));
+        return type;
+    }
+
 
     @SuppressLint("DefaultLocale")
     private void updateNotification(Context context, String title, int status, Integer progress, PendingIntent intent, boolean finalize) {
@@ -500,7 +511,16 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
           DownloadTask task =    taskDao.loadTask(task_id);
           log("downloaded "+ task.filename);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
+
+            Intent openIntent = new Intent();
+            openIntent.setAction(android.content.Intent.ACTION_VIEW);
+            File file = new File(task.savedDir+"/"+task.filename); // set your audio path
+            openIntent.setDataAndType(Uri.fromFile(file), getMimeType(file,context));
+
+            PendingIntent pIntent = PendingIntent.getActivity(context, 0, openIntent, 0);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID+"downloaded").
+                    setContentIntent(pIntent).
                     setContentTitle("Downloaded "+task.filename)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(true)
@@ -508,6 +528,9 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                             builder.setContentText("100%").setProgress(0, 0, false);
                 builder.setOngoing(false)
                         .setSmallIcon(android.R.drawable.stat_sys_download_done);
+
+
+
                 log("Notifiying "+task_id.hashCode());
                 try {
                     NotificationManagerCompat.from(context).notify(task_id.hashCode(), builder.build());
