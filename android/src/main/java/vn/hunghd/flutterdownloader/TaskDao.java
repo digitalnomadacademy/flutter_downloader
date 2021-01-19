@@ -122,7 +122,7 @@ public class TaskDao {
         return result;
     }
 
-    public void updateTask(String taskId, int status, int progress) {
+    public void updateTask(String taskId, int status, Integer progress) {
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put(TaskContract.TaskEntry.COLUMN_NAME_STATUS, status);
