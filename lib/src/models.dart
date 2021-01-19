@@ -90,15 +90,31 @@ class DownloadTask {
     );
   }
 
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is DownloadTask &&
           runtimeType == other.runtimeType &&
-          taskId == other.taskId;
+          taskId == other.taskId &&
+          status == other.status &&
+          progress == other.progress &&
+          url == other.url &&
+          filename == other.filename &&
+          savedDir == other.savedDir &&
+          timeCreated == other.timeCreated &&
+          worker_id == other.worker_id;
 
   @override
-  int get hashCode => taskId.hashCode;
+  int get hashCode =>
+      taskId.hashCode ^
+      status.hashCode ^
+      progress.hashCode ^
+      url.hashCode ^
+      filename.hashCode ^
+      savedDir.hashCode ^
+      timeCreated.hashCode ^
+      worker_id.hashCode;
 
   @override
   String toString() =>
