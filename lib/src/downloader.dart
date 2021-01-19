@@ -63,9 +63,8 @@ class FlutterDownloader {
   /// an unique identifier of the new download task
   ///
   static Future<String> enqueue(
-      {
-        @required String task_id,
-        @required String url,
+      {@required String task_id,
+      @required String url,
       @required String savedDir,
       String fileName,
       Map<String, String> headers,
@@ -184,7 +183,9 @@ class FlutterDownloader {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
     try {
-      return await _channel.invokeMethod('cancel', {'task_id': taskId});
+      return await _channel.invokeMethod('cancel', {
+        'task_id': taskId,
+      });
     } on PlatformException catch (e) {
       print(e.message);
       return null;
@@ -293,12 +294,17 @@ class FlutterDownloader {
   /// plugin remove the downloaded file. The default value is `false`.
   ///
   static Future<Null> remove(
-      {@required String taskId, bool shouldDeleteContent = false}) async {
+      {@required String taskId,
+      bool shouldDeleteContent = false,
+      String worker_id}) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
     try {
-      return await _channel.invokeMethod('remove',
-          {'task_id': taskId, 'should_delete_content': shouldDeleteContent});
+      return await _channel.invokeMethod('remove', {
+        'task_id': taskId,
+        'should_delete_content': shouldDeleteContent,
+        "worker_id": worker_id
+      });
     } on PlatformException catch (e) {
       print(e.message);
       return null;
@@ -386,7 +392,7 @@ class FlutterDownloader {
   ///
   /// {@end-tool}
   ///
-  static registerCallback(DownloadCallback callback)async {
+  static registerCallback(DownloadCallback callback) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
     if (callback != null) {
       // remove previous setting
@@ -397,7 +403,7 @@ class FlutterDownloader {
           int status = call.arguments['status'];
           int process = call.arguments['progress'];
           String worker_id = call.arguments['worker_id'];
-          callback(id, DownloadTaskStatus(status), process,worker_id);
+          callback(id, DownloadTaskStatus(status), process, worker_id);
         }
         return null;
       });
@@ -408,8 +414,8 @@ class FlutterDownloader {
     final callbackHandle = PluginUtilities.getCallbackHandle(callback);
     assert(callbackHandle != null,
         'callback must be a top-level or a static function');
-  var handle = await  _channel.invokeMethod(
+    var handle = await _channel.invokeMethod(
         'registerCallback', <dynamic>[callbackHandle.toRawHandle()]);
-  return handle;
+    return handle;
   }
 }

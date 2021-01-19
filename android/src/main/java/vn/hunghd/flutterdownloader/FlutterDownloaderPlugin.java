@@ -144,7 +144,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         return request;
     }
 
-    private void sendUpdateProgress(String id, int status, int progress,String worker_id) {
+    private void sendUpdateProgress(String id, int status, Integer progress,String worker_id) {
         HashMap<String, Object> args = new HashMap<>();
         args.put("task_id", id);
         args.put("status", status);
@@ -347,6 +347,8 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
                     tempFile.delete();
                 }
             }
+            sendUpdateProgress(taskId, DownloadStatus.UNDEFINED, null,null);
+
             taskDao.deleteTask(taskId);
 
 //            NotificationManagerCompat.from(context).cancel(task.primaryId);
