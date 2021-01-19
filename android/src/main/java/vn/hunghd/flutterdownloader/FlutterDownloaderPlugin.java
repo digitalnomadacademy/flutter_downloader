@@ -229,7 +229,8 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
 
     private void cancel(MethodCall call, MethodChannel.Result result) {
         String taskId = call.argument("task_id");
-        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(taskId));
+        String worker_id = call.argument("worker_id");
+        WorkManager.getInstance(context).cancelWorkById(UUID.fromString(worker_id));
         result.success(null);
     }
 

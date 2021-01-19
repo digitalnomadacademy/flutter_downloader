@@ -179,12 +179,13 @@ class FlutterDownloader {
   ///
   /// * `taskId`: unique identifier of the download task
   ///
-  static Future<Null> cancel({@required String taskId}) async {
+  static Future<Null> cancel({@required String taskId, String worker_id}) async {
     assert(_initialized, 'FlutterDownloader.initialize() must be called first');
 
     try {
       return await _channel.invokeMethod('cancel', {
         'task_id': taskId,
+        'worker_id': worker_id,
       });
     } on PlatformException catch (e) {
       print(e.message);

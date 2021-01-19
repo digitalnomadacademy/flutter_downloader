@@ -397,6 +397,10 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 updateNotification(context, filename == null ? fileURL : filename, status, -1, null, true);
                 taskDao.updateTask(task_id, status, lastProgress);
                 log(isStopped() ? "Download canceled" : "Server replied HTTP code: " + responseCode);
+                if(isStopped()){
+                    sendUpdateProcessEvent(status, null);
+
+                }
             }
         } catch (IOException e) {
             updateNotification(context, filename == null ? fileURL : filename, DownloadStatus.FAILED, -1, null, true);
@@ -647,7 +651,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 //        }
     }
 
-    private void sendUpdateProcessEvent(int status, int progress) {
+    private void sendUpdateProcessEvent(int status, Integer progress) {
         final List<Object> args = new ArrayList<>();
         long callbackHandle = getInputData().getLong(ARG_CALLBACK_HANDLE, 0);
         String worker_id = getId().toString();
