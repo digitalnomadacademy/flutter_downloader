@@ -327,11 +327,12 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
 
     private void remove(MethodCall call, MethodChannel.Result result) {
         String taskId = call.argument("task_id");
+        String workerId = call.argument("worker_id");
         boolean shouldDeleteContent = call.argument("should_delete_content");
         DownloadTask task = taskDao.loadTask(taskId);
         if (task != null) {
             if (task.status == DownloadStatus.ENQUEUED || task.status == DownloadStatus.RUNNING) {
-                WorkManager.getInstance(context).cancelWorkById(UUID.fromString(taskId));
+                WorkManager.getInstance(context).cancelWorkById(UUID.fromString(workerId));
             }
             if (shouldDeleteContent) {
                 String filename = task.filename;
@@ -348,7 +349,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
             }
             taskDao.deleteTask(taskId);
 
-            NotificationManagerCompat.from(context).cancel(task.primaryId);
+//            NotificationManagerCompat.from(context).cancel(task.primaryId);
 
             result.success(null);
         } else {
