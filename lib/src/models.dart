@@ -68,6 +68,7 @@ class DownloadTask {
     String savedDir,
     int timeCreated,
     String worker_id,
+    int file_size,
   }) {
     if ((taskId == null || identical(taskId, this.taskId)) &&
         (status == null || identical(status, this.status)) &&
@@ -76,7 +77,8 @@ class DownloadTask {
         (filename == null || identical(filename, this.filename)) &&
         (savedDir == null || identical(savedDir, this.savedDir)) &&
         (timeCreated == null || identical(timeCreated, this.timeCreated)) &&
-        (worker_id == null || identical(worker_id, this.worker_id))) {
+        (worker_id == null || identical(worker_id, this.worker_id)) &&
+        (file_size == null || identical(file_size, this.file_size))) {
       return this;
     }
 
@@ -89,9 +91,13 @@ class DownloadTask {
       savedDir: savedDir ?? this.savedDir,
       timeCreated: timeCreated ?? this.timeCreated,
       worker_id: worker_id ?? this.worker_id,
+      file_size: file_size ?? this.file_size,
     );
   }
 
+  @override
+  String toString() =>
+      "DownloadTask(taskId: $taskId, status: $status, progress: $progress, url: $url, filename: $filename, savedDir: $savedDir, timeCreated: $timeCreated)";
 
   @override
   bool operator ==(Object other) =>
@@ -105,7 +111,8 @@ class DownloadTask {
           filename == other.filename &&
           savedDir == other.savedDir &&
           timeCreated == other.timeCreated &&
-          worker_id == other.worker_id;
+          worker_id == other.worker_id &&
+          file_size == other.file_size;
 
   @override
   int get hashCode =>
@@ -116,9 +123,6 @@ class DownloadTask {
       filename.hashCode ^
       savedDir.hashCode ^
       timeCreated.hashCode ^
-      worker_id.hashCode;
-
-  @override
-  String toString() =>
-      "DownloadTask(taskId: $taskId, status: $status, progress: $progress, url: $url, filename: $filename, savedDir: $savedDir, timeCreated: $timeCreated)";
+      worker_id.hashCode ^
+      file_size.hashCode;
 }
