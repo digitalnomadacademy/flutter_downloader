@@ -77,28 +77,23 @@ public class TaskDao {
         );
 
         List<DownloadTask> result = new ArrayList<>();
+        List<DownloadTask> toDelete = new ArrayList<>();
         while (cursor.moveToNext()) {
             DownloadTask task = parseCursor(cursor);
             File file = new File(task.savedDir+File.pathSeparator+task.filename);
-
-
-
-            if(task.progress>=0&& !file.exists()){
-                deleteTask(task.taskId);
-            }
-
-            if(task.status!=DownloadStatus.FAILED){
-                result.add(task);
+            if(task.progress>0&& !file.exists()){
+                file.delete();
+                toDelete.add(task);
             } else {
-                try {
-                    deleteTask(task.taskId);
-                }
-                catch (Exception e){
-                    int i;
-                }
+                result.add(task);
+
             }
         }
         cursor.close();
+
+            for (DownloadTask task : toDelete) deleteTask(task.taskId);
+
+
 
         return result;
     }
