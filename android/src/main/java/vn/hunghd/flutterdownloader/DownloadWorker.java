@@ -511,14 +511,22 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
           DownloadTask task =    taskDao.loadTask(task_id);
           log("downloaded "+ task.filename);
 
+            String saveFilePath = task.savedDir + File.separator + task.filename;
+            File file = new File(saveFilePath);
 
-            Intent openIntent = new Intent();
-            openIntent.setAction(android.content.Intent.ACTION_VIEW);
-            openIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            File file = new File(task.savedDir+"/"+task.filename); // set your audio path
-            openIntent.setDataAndType(Uri.fromFile(file), getMimeType(file,context));
+                    PendingIntent pIntent = null;
 
-            PendingIntent pIntent = PendingIntent.getActivity(context, 0, openIntent, 0);
+
+            Intent opIntent = IntentUtils.validatedFileIntent(getApplicationContext(), saveFilePath, getMimeType(file,context));
+                if (opIntent != null) {
+                    log("Setting an intent to open the file " + saveFilePath);
+                    pIntent.getActivity(getApplicationContext(), 0, opIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                } else {
+                    log("There's no application that can open the file " + saveFilePath);
+                }
+
+
+
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
                     setContentIntent(pIntent).
