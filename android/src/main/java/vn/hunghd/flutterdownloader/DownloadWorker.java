@@ -519,7 +519,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
             PendingIntent pIntent = PendingIntent.getActivity(context, 0, openIntent, 0);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID+"downloaded").
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
                     setContentIntent(pIntent).
                     setContentTitle("Downloaded "+task.filename)
                     .setOnlyAlertOnce(true)
