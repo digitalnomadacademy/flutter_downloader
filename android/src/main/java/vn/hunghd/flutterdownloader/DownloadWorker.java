@@ -356,6 +356,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                     outputStream = new FileOutputStream(saveFilePath, isResume);
 
                 } catch (Exception e){
+                    log("Exception on line 359: "+ e.toString());
                     outputStream = new FileOutputStream(saveFilePath, false);
 
 
