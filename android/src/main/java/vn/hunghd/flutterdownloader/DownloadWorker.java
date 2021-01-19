@@ -485,14 +485,6 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             notificationManager.createNotificationChannel(channel);
         }
     }
-    public static String getMimeType(File file, Context context)
-    {
-        Uri uri = Uri.fromFile(file);
-        ContentResolver cR = context.getContentResolver();
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        String type = mime.getExtensionFromMimeType(cR.getType(uri));
-        return type;
-    }
 
 
     @SuppressLint("DefaultLocale")
@@ -517,10 +509,9 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                     PendingIntent pIntent = null;
 
 
-            Intent opIntent = IntentUtils.validatedFileIntent(getApplicationContext(), saveFilePath, getMimeType(file,context));
+            Intent opIntent = IntentUtils.validatedFileIntent(getApplicationContext(), saveFilePath, "*/*");
                 if (opIntent != null) {
                     log("Setting an intent to open the file " + saveFilePath);
-                    log("Mime type " + getMimeType(file,context));
                     pIntent.getActivity(getApplicationContext(), 0, opIntent, PendingIntent.FLAG_CANCEL_CURRENT);
                 } else {
                     log("There's no application that can open the file " + saveFilePath);
