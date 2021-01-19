@@ -520,6 +520,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             Intent opIntent = IntentUtils.validatedFileIntent(getApplicationContext(), saveFilePath, getMimeType(file,context));
                 if (opIntent != null) {
                     log("Setting an intent to open the file " + saveFilePath);
+                    log("Mime type " + getMimeType(file,context));
                     pIntent.getActivity(getApplicationContext(), 0, opIntent, PendingIntent.FLAG_CANCEL_CURRENT);
                 } else {
                     log("There's no application that can open the file " + saveFilePath);
