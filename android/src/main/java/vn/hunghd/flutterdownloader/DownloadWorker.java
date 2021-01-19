@@ -363,7 +363,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 }
 
                 DownloadTask task = taskDao.loadTask(task_id);
-                int progress = isStopped() && task.resumable ? lastProgress : null;
+                int progress = isStopped() && task.resumable ? lastProgress : 100;
                 int status = isStopped() ? (task.resumable ? DownloadStatus.PAUSED : DownloadStatus.CANCELED) : DownloadStatus.COMPLETE;
                 int storage = ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
                 PendingIntent pendingIntent = null;
@@ -480,9 +480,11 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
     @SuppressLint("DefaultLocale")
     private void updateNotification(Context context, String title, int status, Integer progress, PendingIntent intent, boolean finalize) {
-         
-
-
+        if(status == DownloadStatus.CANCELED) {
+            progress = null;
+        }
+        
+        
         sendUpdateProcessEvent(status, progress);
 
         if(progress==-1){
