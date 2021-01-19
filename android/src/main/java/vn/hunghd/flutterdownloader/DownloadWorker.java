@@ -514,6 +514,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
             Intent openIntent = new Intent();
             openIntent.setAction(android.content.Intent.ACTION_VIEW);
+            openIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             File file = new File(task.savedDir+"/"+task.filename); // set your audio path
             openIntent.setDataAndType(Uri.fromFile(file), getMimeType(file,context));
 
