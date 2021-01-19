@@ -1,6 +1,7 @@
 package vn.hunghd.flutterdownloader;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -218,7 +219,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             taskDao = null;
             return Result.success();
         } catch (Exception e) {
-            updateNotification(context, filename == null ? url : filename, DownloadStatus.FAILED, -1, null, true);
+            updateNotification(context, filename == null ? url : filename, DownloadStatus.FAILED, null, null, true);
             taskDao.updateTask(task_id, DownloadStatus.FAILED, lastProgress);
             e.printStackTrace();
             dbHelper = null;
@@ -350,8 +351,15 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 inputStream = httpConn.getInputStream();
 
                 // opens an output stream to save into file
-                outputStream = new FileOutputStream(saveFilePath, isResume);
+                // if file corrupted may throw exception
+                try {
+                    outputStream = new FileOutputStream(saveFilePath, isResume);
 
+                } catch (Exception e){
+                    outputStream = new FileOutputStream(saveFilePath, false);
+
+
+                }
                 long count = downloadedBytes;
                 int bytesRead = -1;
                 byte[] buffer = new byte[BUFFER_SIZE];
@@ -534,7 +542,9 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
                 log("Notifiying "+task_id.hashCode());
                 try {
-                    NotificationManagerCompat.from(context).notify(task_id.hashCode(), builder.build());
+                    Notification noti = builder.build();
+                    noti.flags|= Notification.FLAG_AUTO_CANCEL;
+                    NotificationManagerCompat.from(context).notify(task_id.hashCode(), noti);
                 }
                 catch (Exception e){
                     log("Exception while notifying"+e.toString());
