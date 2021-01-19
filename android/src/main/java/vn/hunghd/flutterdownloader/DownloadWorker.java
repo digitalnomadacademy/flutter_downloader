@@ -200,6 +200,15 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
         updateNotification(context, filename == null ? url : filename, DownloadStatus.RUNNING, task.progress, null, false);
         taskDao.updateTask(task_id, DownloadStatus.RUNNING, task.progress);
 
+
+        String saveFilePath = savedDir + File.separator + filename;
+        File partialFile = new File(saveFilePath);
+        if (partialFile.exists()) {
+            isResume = true;
+            log("exists file for "+ filename + "automatic resuming...");
+        }
+
+
         try {
             downloadFile(context, url, savedDir, filename, headers, isResume);
             cleanUp();
