@@ -17,7 +17,7 @@ import java.util.List;
 
 public class IntentUtils {
 
-    private static Intent buildIntent(Context context, File file, String mime) {
+    public static Intent buildIntent(Context context, File file, String mime) {
         Intent intent = new Intent(Intent.ACTION_VIEW);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Uri uri = FileProvider.getUriForFile(context, context.getPackageName() + ".flutter_downloader.provider", file);

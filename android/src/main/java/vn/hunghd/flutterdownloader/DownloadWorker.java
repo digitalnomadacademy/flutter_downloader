@@ -509,10 +509,10 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                     PendingIntent pIntent = null;
 
 
-            Intent opIntent = IntentUtils.validatedFileIntent(getApplicationContext(), saveFilePath, "*/*");
+            Intent opIntent = IntentUtils.buildIntent(getApplicationContext(), file, "*/*");
                 if (opIntent != null) {
                     log("Setting an intent to open the file " + saveFilePath);
-                    pIntent.getActivity(getApplicationContext(), 0, opIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+                    pIntent = PendingIntent.getActivity(getApplicationContext(), 0, opIntent, PendingIntent.FLAG_CANCEL_CURRENT);
                 } else {
                     log("There's no application that can open the file " + saveFilePath);
                 }
@@ -521,8 +521,8 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
 
             NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID).
-                    setContentIntent(pIntent).
-                    setContentTitle("Downloaded "+task.filename)
+
+                    setContentTitle("Downloaded "+task.filename).setContentIntent(pIntent)
                     .setOnlyAlertOnce(true)
                     .setAutoCancel(true)
                     .setPriority(NotificationCompat.PRIORITY_HIGH);
