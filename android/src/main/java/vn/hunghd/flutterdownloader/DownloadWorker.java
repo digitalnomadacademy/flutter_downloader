@@ -394,13 +394,10 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             } else {
                 DownloadTask task = taskDao.loadTask(task_id);
                 int status = isStopped() ? (task.resumable ? DownloadStatus.PAUSED : DownloadStatus.CANCELED) : DownloadStatus.FAILED;
-                updateNotification(context, filename == null ? fileURL : filename, status, null, null, true);
-                taskDao.updateTask(task_id, status, null);
+                updateNotification(context, filename == null ? fileURL : filename, status, -1, null, true);
+                taskDao.updateTask(task_id, status, lastProgress);
                 log(isStopped() ? "Download canceled" : "Server replied HTTP code: " + responseCode);
-                if(isStopped()){
-                    sendUpdateProcessEvent(status, null);
 
-                }
             }
         } catch (IOException e) {
             updateNotification(context, filename == null ? fileURL : filename, DownloadStatus.FAILED, -1, null, true);
