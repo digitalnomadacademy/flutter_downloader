@@ -80,10 +80,22 @@ public class TaskDao {
         while (cursor.moveToNext()) {
             DownloadTask task = parseCursor(cursor);
             File file = new File(task.savedDir+File.pathSeparator+task.filename);
-            if(file.exists()||task.status==DownloadStatus.FAILED){
+
+
+
+            if(task.progress>=0&& !file.exists()){
+                deleteTask(task.taskId);
+            }
+
+            if(task.status!=DownloadStatus.FAILED){
                 result.add(task);
             } else {
-                deleteTask(task.taskId);
+                try {
+                    deleteTask(task.taskId);
+                }
+                catch (Exception e){
+                    int i;
+                }
             }
         }
         cursor.close();
