@@ -351,6 +351,8 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                                                     filename = stripAccents(filename);
 
                         }
+                        filename = Normalizer.normalize(filename,Normalizer.Form.NFD);
+                        filename  = filename.replaceAll("[^\\p{ASCII}]", "").replaceAll("\\p{M}", "");
                     }
                 }
                 saveFilePath = savedDir + File.separator + filename;
@@ -631,12 +633,11 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             if(count==0||averageProgress==100.0){
                 NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
              } else {
-                if(fileSizeSum>10&&averageProgress>0){
+                if(fileSizeSum>10){
                     NotificationManagerCompat.from(context).notify(DOWNLOADING_ID, builder.build());
 
                 } else {
                     NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
-
                 }
              }
 
