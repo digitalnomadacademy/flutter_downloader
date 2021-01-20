@@ -181,7 +181,7 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         String filename = call.argument("file_name");
         String headers = call.argument("headers");
         String taskId = call.argument("task_id");
-        filename = stripAccents(filename);
+
         boolean showNotification = call.argument("show_notification");
         boolean openFileFromNotification = call.argument("open_file_from_notification");
         boolean requiresStorageNotLow = call.argument("requires_storage_not_low");
@@ -191,11 +191,6 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         String worker_id = request.getId().toString();
         sendUpdateProgress(taskId, DownloadStatus.ENQUEUED, 0,worker_id);
         taskDao.insertOrUpdateNewTask(taskId, url, DownloadStatus.ENQUEUED, 0, filename, savedDir, headers, showNotification, openFileFromNotification,0);
-    }
-    public static String stripAccents(String input){
-        return input == null ? null :
-                Normalizer.normalize(input, Normalizer.Form.NFD)
-                        .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 
     private void loadTasks(MethodCall call, MethodChannel.Result result) {

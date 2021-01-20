@@ -39,6 +39,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.text.Normalizer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -254,6 +255,12 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
         conn.setDoInput(true);
         return downloadedBytes;
     }
+    public static String stripAccents(String input){
+        return input == null ? null :
+                Normalizer.normalize(input, Normalizer.Form.NFD)
+                        .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+    }
+
 
     private void downloadFile(Context context, String fileURL, String savedDir, String filename, String headers, boolean isResume) throws IOException {
         String url = fileURL;
@@ -339,6 +346,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                         if (filename == null || filename.isEmpty()) {
                             filename = url.substring(url.lastIndexOf("/") + 1);
                         }
+                        filename = stripAccents(filename);
                     }
                 }
                 saveFilePath = savedDir + File.separator + filename;
