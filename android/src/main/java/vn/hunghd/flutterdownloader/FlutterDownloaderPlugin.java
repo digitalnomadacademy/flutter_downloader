@@ -334,33 +334,38 @@ public class FlutterDownloaderPlugin implements MethodCallHandler, FlutterPlugin
         String workerId = call.argument("worker_id");
         boolean shouldDeleteContent = call.argument("should_delete_content");
         DownloadTask task = taskDao.loadTask(taskId);
-        if (task != null) {
-            if (task.status == DownloadStatus.ENQUEUED || task.status == DownloadStatus.RUNNING) {
-                WorkManager.getInstance(context).cancelWorkById(UUID.fromString(workerId));
-            }
-            if (shouldDeleteContent) {
-                String filename = task.filename;
-                if (filename == null) {
-                    filename = task.url.substring(task.url.lastIndexOf("/") + 1, task.url.length());
+        try {
+            if (task != null) {
+                if (task.status == DownloadStatus.ENQUEUED || task.status == DownloadStatus.RUNNING) {
+                    WorkManager.getInstance(context).cancelWorkById(UUID.fromString(workerId));
                 }
+                if (shouldDeleteContent) {
+                    String filename = task.filename;
+                    if (filename == null) {
+                        filename = task.url.substring(task.url.lastIndexOf("/") + 1, task.url.length());
+                    }
 
-                String saveFilePath = task.savedDir + File.separator + filename;
-                File tempFile = new File(saveFilePath);
-                if (tempFile.exists()) {
-                    deleteFileInMediaStore(tempFile);
-                    tempFile.delete();
+                    String saveFilePath = task.savedDir + File.separator + filename;
+                    File tempFile = new File(saveFilePath);
+                    if (tempFile.exists()) {
+                        deleteFileInMediaStore(tempFile);
+                        tempFile.delete();
+                    }
                 }
-            }
-            sendUpdateProgress(taskId, DownloadStatus.UNDEFINED, null,null);
+                sendUpdateProgress(taskId, DownloadStatus.UNDEFINED, null,null);
 
-            taskDao.deleteTask(taskId);
+                taskDao.deleteTask(taskId);
 
 //            NotificationManagerCompat.from(context).cancel(task.primaryId);
 
-            result.success(null);
-        } else {
+                result.success(null);
+            }
+        } catch (Exception e){
+            taskDao.deleteTask(taskId);
             result.error("invalid_task_id", "not found task corresponding to given task id", null);
+
         }
+
     }
 
     private void deleteFileInMediaStore(File file) {
