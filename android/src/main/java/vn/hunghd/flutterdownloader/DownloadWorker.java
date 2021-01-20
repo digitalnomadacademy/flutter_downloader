@@ -631,8 +631,13 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             if(count==0||averageProgress==100.0){
                 NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
              } else {
-                if(fileSizeSum>10)
-                 NotificationManagerCompat.from(context).notify(DOWNLOADING_ID, builder.build());
+                if(fileSizeSum>10&&averageProgress>0){
+                    NotificationManagerCompat.from(context).notify(DOWNLOADING_ID, builder.build());
+
+                } else {
+                    NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
+
+                }
              }
 
 
