@@ -352,7 +352,10 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
                         }
                         filename = Normalizer.normalize(filename,Normalizer.Form.NFD);
-                        filename  = filename.replaceAll("[^\\p{ASCII}]", "").replaceAll("\\p{M}", "");
+                        filename  = filename.replaceAll("[^\\p{ASCII}]", "").
+                                replaceAll("\\p{M}", "").
+                                replaceAll("[^\\p{Alpha}\\p{Digit}]+","");
+
                     }
                 }
                 saveFilePath = savedDir + File.separator + filename;
