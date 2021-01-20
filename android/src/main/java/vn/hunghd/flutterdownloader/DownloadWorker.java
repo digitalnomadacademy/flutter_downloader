@@ -419,7 +419,6 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
 
                 if(isStopped()){
                     NotificationManagerCompat.from(context).cancelAll();
-
                 }
 
                 log(isStopped() ? "Download canceled" : "File downloaded");
@@ -512,6 +511,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
     private void updateNotification(Context context, String title, int status, Integer progress, PendingIntent intent, boolean finalize) {
         if(status == DownloadStatus.CANCELED) {
             progress = null;
+            NotificationManagerCompat.from(context).cancelAll();
         }
         
         
