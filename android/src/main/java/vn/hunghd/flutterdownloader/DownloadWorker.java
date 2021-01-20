@@ -1,5 +1,6 @@
 package vn.hunghd.flutterdownloader;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -39,6 +40,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -341,12 +343,14 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                         log("Content-Disposition = " + disposition);
                         if (disposition != null && !disposition.isEmpty()) {
                             String name = disposition.replaceFirst("(?i)^.*filename=\"?([^\"]+)\"?.*$", "$1");
-                            filename = URLDecoder.decode(name, charset != null ? charset : "ISO-8859-1");
+                                 filename = URLDecoder.decode(name, charset != null ? charset : "UTF-8");
+
                         }
                         if (filename == null || filename.isEmpty()) {
                             filename = url.substring(url.lastIndexOf("/") + 1);
+                                                    filename = stripAccents(filename);
+
                         }
-                        filename = stripAccents(filename);
                     }
                 }
                 saveFilePath = savedDir + File.separator + filename;
@@ -393,7 +397,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 DownloadTask task = taskDao.loadTask(task_id);
                 int progress = isStopped() && task.resumable ? lastProgress : 100;
                 int status = isStopped() ? (task.resumable ? DownloadStatus.PAUSED : DownloadStatus.CANCELED) : DownloadStatus.COMPLETE;
-                int storage = ContextCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+                int storage = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE);
                 PendingIntent pendingIntent = null;
                 if (status == DownloadStatus.COMPLETE) {
                     if (isImageOrVideoFile(contentType) && isExternalStoragePath(saveFilePath)) {
