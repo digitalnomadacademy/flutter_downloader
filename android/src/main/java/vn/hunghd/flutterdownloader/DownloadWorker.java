@@ -511,14 +511,14 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
     private void updateNotification(Context context, String title, int status, Integer progress, PendingIntent intent, boolean finalize) {
         if(status == DownloadStatus.CANCELED) {
             progress = null;
-            NotificationManagerCompat.from(context).cancelAll();
+            NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
         }
         
         
         sendUpdateProcessEvent(status, progress);
 
         if(progress==-1){
-            NotificationManagerCompat.from(context).cancelAll();
+            NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
         }
         if(progress==100){
           DownloadTask task =    taskDao.loadTask(task_id);
@@ -582,6 +582,10 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                 }
             }
 
+            if(fileSizeSum<10){
+                NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
+            }
+
             if(count!=0){
                 averageProgress = sum/count;
                 remainingFileSizeSum = (averageProgress/100)*fileSizeSum;
@@ -627,6 +631,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
             if(count==0||averageProgress==100.0){
                 NotificationManagerCompat.from(context).cancel(DOWNLOADING_ID);
              } else {
+                if(fileSizeSum>10)
                  NotificationManagerCompat.from(context).notify(DOWNLOADING_ID, builder.build());
              }
 
