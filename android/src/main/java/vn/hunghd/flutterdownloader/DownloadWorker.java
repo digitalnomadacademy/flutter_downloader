@@ -353,7 +353,7 @@ public class DownloadWorker extends Worker implements MethodChannel.MethodCallHa
                         }
                         filename = Normalizer.normalize(filename,Normalizer.Form.NFD);
                         filename  =filename.
-                                replaceAll("[^a-zA-Z0-9\\s]", "");
+                                replaceAll("[^a-zA-Z0-9\\s.]", "");
                     }
                 }
                 saveFilePath = savedDir + File.separator + filename;
